@@ -29,6 +29,14 @@ y, cuando acierta, también las escribe.
   letra solo, como en su pizarra, y toca **Listo**. Si no le sale, el juego le muestra el caminito para
   que la repase. También puede pedir **Ayuda** en cualquier momento.
 
+- **⭐ Por niveles / 🌈 Todas:** por niveles se empieza sólo con 🐾 Animales. Cada palabra que se completa da
+  una ⭐ a su categoría y con 3 ⭐ en la última categoría abierta se abre la siguiente (frutas, comida,
+  juguetes, cuerpo, casa…). En la pantalla de inicio se ve el avance; ↺ lo borra. El orden y la cantidad de
+  estrellas se cambian en `www/js/progress.js`.
+- **💡 Ayuda para ver la imagen:** en "Yo adivino", junto a la pista hay un botón 💡. Si el niño resuelve una
+  suma, ve la imagen con su palabra letra por letra (y la escucha) para memorizarla y seguir jugando. La suma
+  puede ser **hasta 10**, de **dos cifras** (resultado hasta 99, sin llevar), **sin suma** o se puede quitar la ayuda.
+
 Al adivinar aparece una **pista** con la categoría; al tocarla se escucha. Hay 109 imágenes en 11 categorías
 (animales, frutas, verduras, comida, ropa, cuerpo, juguetes, instrumentos, casa, transportes y naturaleza).
 

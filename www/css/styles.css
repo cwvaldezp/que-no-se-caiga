@@ -257,3 +257,41 @@ h2 { margin: 0; font-size: clamp(20px, 5.5vw, 28px); text-align: center; }
 .zoom input { flex: 1; accent-color: var(--primary); }
 .privacy { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .photo-chip.selected { border-color: var(--primary); background: #fff0e8; }
+
+/* Niveles: categorías abiertas y estrellas */
+.levels-progress { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; margin-top: 8px; }
+.levels-progress[hidden] { display: none; }
+.lvl { font-size: 20px; padding: 2px 8px; border-radius: 999px; background: #fff; }
+.lvl.current { background: #fff3c4; box-shadow: 0 2px 0 #f1dc8a; font-size: 18px; }
+.lvl.locked { color: var(--muted); font-size: 16px; }
+.lvl-reset { font-size: 18px; width: 34px; height: 34px; border-radius: 50%; background: #efeaff; color: var(--muted); }
+.pick-locked { grid-column: 1 / -1; margin: 14px 0 4px; text-align: center; color: var(--muted); font-size: 17px; }
+.end-unlock { font-size: 20px; font-weight: bold; color: var(--ink); background: #fff3c4; border-radius: 16px; padding: 8px 14px; margin: 0 0 8px; }
+.end-unlock:empty { display: none; }
+
+/* Ayuda 💡: suma para ver la imagen */
+.hint-row { display: flex; align-items: center; gap: 10px; }
+.help-btn { margin: 10px 0 0; font-size: 22px; width: 44px; height: 38px; border-radius: 999px; background: #fff3c4; box-shadow: 0 3px 0 #f1dc8a; }
+.help-btn[hidden] { display: none; }
+#help-sum, #help-show { display: flex; flex-direction: column; align-items: center; width: 100%; }
+#help-sum[hidden], #help-show[hidden] { display: none; }
+.sum { font-size: 46px; font-weight: bold; white-space: nowrap; }
+.sum-answer {
+  display: inline-block; min-width: 1.6em; padding: 0 8px; border-radius: 14px;
+  border: 3px dashed var(--secondary); color: var(--secondary);
+}
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 300px; margin: 8px 0 4px; }
+.numpad button {
+  font-size: 28px; font-weight: bold; padding: 10px 0; border-radius: 14px;
+  background: #fff; color: var(--ink); box-shadow: 0 4px 0 #d9d3f0; border: 2px solid #efeaff;
+}
+.numpad button.ok { background: var(--yes); color: #fff; box-shadow: 0 4px 0 #23a65a; border-color: var(--yes); }
+.help-pic { font-size: 110px; line-height: 1.1; }
+.help-pic img { height: 140px; border-radius: 16px; }
+.help-word { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0; }
+.help-word span {
+  min-width: 46px; padding: 4px 6px; font-size: 40px; font-weight: bold; color: var(--primary);
+  background: #fff0e8; border-radius: 12px; border-bottom: 4px solid var(--ink);
+}
+.help-word .cursive-letter { height: 50px; }
+#help .big-btn { margin-top: 12px; }

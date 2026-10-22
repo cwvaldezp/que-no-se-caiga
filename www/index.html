@@ -46,6 +46,19 @@
         <button class="chip" data-toggle="voice">🗣️ Voz: <span class="state">Sí</span></button>
         <button class="chip" data-toggle="sfx">🎵 Sonidos: <span class="state">Sí</span></button>
       </div>
+      <p class="label">¿Qué palabras salen?</p>
+      <div class="chips">
+        <button class="chip" data-setting="levels" data-value="on">⭐ Por niveles</button>
+        <button class="chip" data-setting="levels" data-value="off">🌈 Todas</button>
+      </div>
+      <div id="levels-progress" class="levels-progress"></div>
+      <p class="label">💡 Ayuda para ver la imagen</p>
+      <div class="chips">
+        <button class="chip" data-setting="help" data-value="off">🚫 No</button>
+        <button class="chip" data-setting="help" data-value="free">Sin suma</button>
+        <button class="chip" data-setting="help" data-value="sum10">➕ Hasta 10</button>
+        <button class="chip" data-setting="help" data-value="sum99">➕ Dos cifras</button>
+      </div>
     </div>
 
     <button id="btn-mode-pick" class="big-btn primary">🖼️ Yo elijo la imagen</button>
@@ -103,7 +116,10 @@
       <span id="lives" class="lives"></span>
     </header>
     <div id="figure" class="figure"></div>
-    <button id="hint-cat" class="cat-pill" hidden></button>
+    <div class="hint-row">
+      <button id="hint-cat" class="cat-pill" hidden></button>
+      <button id="btn-help" class="help-btn" hidden aria-label="Ayuda: ver la imagen">💡</button>
+    </div>
     <div id="slots" class="slots"></div>
     <div id="misses" class="misses" aria-label="Letras que no están"></div>
     <p id="game-hint" class="hint"></p>
@@ -156,6 +172,25 @@
     </div>
   </div>
 
+  <!-- AYUDA: RESOLVER UNA SUMA PARA VER LA IMAGEN -->
+  <div id="help" class="overlay">
+    <div class="card">
+      <div id="help-sum">
+        <p class="question">Resuelve la suma y te muestro la imagen 💡</p>
+        <div class="sum"><span id="sum-text"></span> = <span id="sum-answer" class="sum-answer"></span></div>
+        <p id="sum-feedback" class="feedback"></p>
+        <div id="numpad" class="numpad"></div>
+      </div>
+      <div id="help-show">
+        <div id="help-pic" class="help-pic"></div>
+        <div id="help-word" class="help-word"></div>
+        <p class="hint">¡Mira bien cómo se escribe! 👀</p>
+        <button id="btn-help-say" class="small-btn">🔊 Escuchar</button>
+      </div>
+      <button id="btn-help-close" class="big-btn secondary"></button>
+    </div>
+  </div>
+
   <!-- FIN -->
   <div id="end" class="overlay">
     <div class="card">
@@ -163,6 +198,7 @@
       <h2 id="end-title"></h2>
       <p id="end-text" class="end-text"></p>
       <div class="end-word" id="end-word"></div>
+      <p id="end-unlock" class="end-unlock"></p>
       <button id="btn-again" class="big-btn primary">🔁 Jugar otra vez</button>
       <button class="big-btn secondary" data-go="home">🏠 Inicio</button>
     </div>
@@ -174,6 +210,7 @@
   <script src="js/voice-clips.js"></script>
   <script src="js/letters.js"></script>
   <script src="js/words.js"></script>
+  <script src="js/progress.js"></script>
   <script src="js/figure.js"></script>
   <script src="js/tracer.js"></script>
   <script src="js/app.js"></script>

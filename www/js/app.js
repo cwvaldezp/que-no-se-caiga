@@ -3,7 +3,8 @@
 
   // gender: chico/chica · case: upper/lower/cursive (ABC, abc o cursiva) · write: guided/free
   // voice: on/off (la voz que habla) · sfx: on/off (los efectos de sonido)
-  var settings = { gender: 'chico', case: 'upper', write: 'guided', voice: 'on', sfx: 'on' };
+  // levels: on (se abren categorías al ganar) / off (todas) · help: off/free/sum10/sum99 (la ayuda 💡)
+  var settings = { gender: 'chico', case: 'upper', write: 'guided', voice: 'on', sfx: 'on', levels: 'on', help: 'sum99' };
   Object.keys(settings).forEach(function (k) {
     try { settings[k] = localStorage.getItem(k) || settings[k]; } catch (e) { /* sin almacenamiento */ }
   });
@@ -11,6 +12,10 @@
   // Selfie para la cara (data URL, sólo en este aparato).
   var photo = null;
   try { photo = localStorage.getItem('photo'); } catch (e) { /* sin almacenamiento */ }
+
+  // Estrellas ganadas por categoría ({ animal: 3, … }), para ir abriendo categorías.
+  var stars = {};
+  try { stars = JSON.parse(localStorage.getItem('stars')) || {}; } catch (e) { /* sin almacenamiento */ }
 
   var state = null;     // partida actual
   var tracer = null;    // pizarra activa
@@ -189,6 +194,57 @@
     document.body.classList.toggle('lower-case', isLower());
     document.body.classList.toggle('cursive', isCursive());
     renderSound();
+    renderLevels();
+  }
+
+  /* ---------- Niveles: categorías que se abren al ganar ---------- */
+  function openCats() {
+    return settings.levels === 'on' ? window.Progress.unlocked(stars) : window.UNLOCK_ORDER;
+  }
+  // La última categoría abierta (la que hay que completar para abrir otra), o null si ya están todas.
+  function currentCat() {
+    var open = window.Progress.unlocked(stars);
+    return open.length < window.UNLOCK_ORDER.length ? open[open.length - 1] : null;
+  }
+  function starsText(cat) {
+    var n = Math.min(stars[cat] || 0, window.STARS_TO_UNLOCK);
+    return new Array(n + 1).join('⭐') + new Array(window.STARS_TO_UNLOCK - n + 1).join('☆');
+  }
+
+  function renderLevels() {
+    var box = $('levels-progress');
+    box.hidden = settings.levels !== 'on';
+    var open = window.Progress.unlocked(stars), cur = currentCat(), C = window.CATEGORIES;
+    var html = open.map(function (k) {
+      return '<span class="lvl' + (k === cur ? ' current' : '') + '">' + C[k].icon + (k === cur ? ' ' + starsText(k) : '') + '</span>';
+    }).join('');
+    var locked = window.UNLOCK_ORDER.length - open.length;
+    html += locked ? '<span class="lvl locked">🔒' + (locked > 1 ? ' +' + (locked - 1) : '') + '</span>' : '<span class="lvl">🏆</span>';
+    box.innerHTML = html + '<button id="btn-levels-reset" class="lvl-reset" aria-label="Empezar los niveles de cero">↺</button>';
+  }
+  $('levels-progress').addEventListener('click', function (e) {
+    if (!e.target.closest('#btn-levels-reset')) return;
+    if (!confirm('¿Borrar las estrellas y volver a empezar sólo con ' + window.CATEGORIES[window.UNLOCK_ORDER[0]].name + '?')) return;
+    stars = {};
+    try { localStorage.removeItem('stars'); } catch (err) { /* sin almacenamiento */ }
+    renderLevels();
+  });
+
+  // Una estrella para la categoría de la palabra completada. Devuelve el mensaje para la pantalla final.
+  function addStar(cat) {
+    if (!cat || window.UNLOCK_ORDER.indexOf(cat) === -1) return '';
+    var before = window.Progress.unlocked(stars).length;
+    stars[cat] = (stars[cat] || 0) + 1;
+    try { localStorage.setItem('stars', JSON.stringify(stars)); } catch (e) { /* sin almacenamiento */ }
+    if (settings.levels !== 'on') return '⭐ ¡Ganaste una estrella!';
+    var open = window.Progress.unlocked(stars);
+    if (open.length > before) {
+      var c = window.CATEGORIES[open[open.length - 1]];
+      return '🔓 ¡Abriste una categoría nueva: ' + c.icon + ' ' + c.name + '!';
+    }
+    var cur = currentCat();
+    if (cat === cur) return starsText(cur) + ' ¡Sigue así para abrir otra categoría!';
+    return '⭐ ¡Ganaste una estrella!';
   }
 
   /* ---------- Selfie ---------- */
@@ -327,7 +383,7 @@
   });
 
   $('btn-mode-pick').addEventListener('click', function () {
-    grid.querySelectorAll('.name[data-word]').forEach(function (n) { n.textContent = disp(n.getAttribute('data-word')); });
+    renderPick();
     show('pick');
     say('elige');
   });
@@ -339,28 +395,45 @@
   own.className = 'draw-own';
   own.innerHTML = '<span class="emoji">✏️</span><span class="name">DIBUJAR</span>';
   own.addEventListener('click', openDraw);
-  grid.appendChild(own);
-  // Imágenes agrupadas por categoría, con un título por grupo.
-  Object.keys(window.CATEGORIES).forEach(function (k) {
-    var c = window.CATEGORIES[k], words = window.WORDS.filter(function (w) { return w.cat === k; });
-    if (!words.length) return;
-    var h = document.createElement('h3');
-    h.className = 'pick-group';
-    h.textContent = c.icon + ' ' + c.name;
-    grid.appendChild(h);
-    words.forEach(function (w) {
-      var b = document.createElement('button');
-      b.innerHTML = '<span class="emoji">' + w.emoji + '</span><span class="name" data-word="' + w.word + '">' + disp(w.word) + '</span>';
-      b.addEventListener('click', function () { startGame(w, 'pick'); });
-      grid.appendChild(b);
+  // Imágenes agrupadas por categoría, con un título por grupo. Sólo las categorías abiertas.
+  function renderPick() {
+    grid.innerHTML = '';
+    grid.appendChild(own);
+    var open = openCats();
+    Object.keys(window.CATEGORIES).forEach(function (k) {
+      var c = window.CATEGORIES[k], words = window.WORDS.filter(function (w) { return w.cat === k; });
+      if (!words.length || open.indexOf(k) === -1) return;
+      var h = document.createElement('h3');
+      h.className = 'pick-group';
+      h.textContent = c.icon + ' ' + c.name;
+      grid.appendChild(h);
+      words.forEach(function (w) {
+        var b = document.createElement('button');
+        b.innerHTML = '<span class="emoji">' + w.emoji + '</span><span class="name">' + disp(w.word) + '</span>';
+        b.addEventListener('click', function () { startGame(w, 'pick'); });
+        grid.appendChild(b);
+      });
     });
-  });
+    var cur = settings.levels === 'on' && currentCat();
+    if (cur) {
+      var lock = document.createElement('p');
+      lock.className = 'pick-locked';
+      lock.textContent = '🔒 Gana ' + starsText(cur) + ' en ' + window.CATEGORIES[cur].name + ' para abrir otra categoría';
+      grid.appendChild(lock);
+    }
+  }
 
+  // Palabra al azar de las categorías abiertas. La mitad de las veces, de la última que se abrió,
+  // para que se practique la nueva.
   function randomWord() {
-    var options = window.WORDS.filter(function (w) { return recent.indexOf(w.word) === -1; });
+    var open = openCats(), cur = settings.levels === 'on' && currentCat();
+    var cats = cur && open.length > 1 && Math.random() < 0.5 ? [cur] : open;
+    var pool = window.WORDS.filter(function (w) { return cats.indexOf(w.cat) !== -1; });
+    var options = pool.filter(function (w) { return recent.indexOf(w.word) === -1; });
+    if (!options.length) options = pool;
     var w = options[Math.floor(Math.random() * options.length)];
     recent.push(w.word);
-    if (recent.length > Math.min(10, window.WORDS.length - 1)) recent.shift();
+    if (recent.length > 10) recent.shift();
     return w;
   }
 
@@ -368,7 +441,7 @@
   // mode 'pick': el niño eligió la imagen y otro adivina.
   // mode 'guess': el juego eligió la imagen y el niño adivina.
   function startGame(w, mode) {
-    state = { word: w.word, pic: picHTML(w), cat: w.cat, mode: mode, letters: w.word.split(''), found: {}, used: {}, errors: 0, over: false };
+    state = { word: w.word, pic: picHTML(w), cat: w.cat, drawn: !!w.image, mode: mode, letters: w.word.split(''), found: {}, used: {}, errors: 0, over: false };
     show('game');
 
     var peek = $('btn-peek');
@@ -395,6 +468,8 @@
     var cat = window.CATEGORIES[w.cat], pill = $('hint-cat');
     pill.hidden = !cat;
     if (cat) pill.innerHTML = '<span class="cat-label">Pista:</span> ' + cat.icon + ' ' + cat.label;
+    // Ayuda 💡 para el que adivina: con una suma (o directo) se ve la imagen y su palabra.
+    $('btn-help').hidden = mode !== 'guess' || settings.help === 'off';
     var intro = mode === 'pick' ? 'empieza_juego' : 'adivina';
     if (cat) say(intro, { cat: w.cat });
     else say(intro);
@@ -403,6 +478,67 @@
   $('hint-cat').addEventListener('click', function () {
     if (state && state.cat) sayAlways({ cat: state.cat });
   });
+
+  /* ---------- Ayuda: resolver una suma para ver la imagen ---------- */
+  var help = { sum: null, typed: '' };
+
+  $('btn-help').addEventListener('click', function () {
+    if (!state || state.over) return;
+    if (settings.help === 'free') { showHelpPic(); return; }
+    help.sum = window.Progress.makeSum(settings.help);
+    help.typed = '';
+    $('sum-text').textContent = help.sum.a + ' + ' + help.sum.b;
+    $('sum-feedback').textContent = '';
+    renderSumAnswer();
+    $('help-sum').hidden = false;
+    $('help-show').hidden = true;
+    $('btn-help-close').textContent = '⬅️ Volver';
+    openOverlay('help');
+  });
+
+  function renderSumAnswer() { $('sum-answer').textContent = help.typed || '?'; }
+
+  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✅'].forEach(function (k) {
+    var b = document.createElement('button');
+    b.textContent = k;
+    if (k === '✅') b.className = 'ok';
+    b.addEventListener('click', function () { onNumKey(k); });
+    $('numpad').appendChild(b);
+  });
+
+  function onNumKey(k) {
+    if (k === '⌫') help.typed = help.typed.slice(0, -1);
+    else if (k !== '✅') { if (help.typed.length < 2) help.typed += k; }
+    else if (help.typed) {
+      if (parseInt(help.typed, 10) === help.sum.a + help.sum.b) {
+        sfx.good();
+        showHelpPic();
+        return;
+      }
+      sfx.bad();
+      help.typed = '';
+      var fb = $('sum-feedback');
+      fb.style.color = 'var(--primary)';
+      fb.textContent = '¡Casi! Cuenta otra vez 🤔';
+      fb.classList.remove('shake');
+      void fb.offsetWidth;
+      fb.classList.add('shake');
+    }
+    renderSumAnswer();
+  }
+
+  // La imagen secreta con su palabra letra por letra, para que la mire y la siga escribiendo.
+  function showHelpPic() {
+    $('help-pic').innerHTML = state.pic;
+    $('help-word').innerHTML = state.letters.map(function (l) { return '<span>' + letterHTML(l) + '</span>'; }).join('');
+    $('help-sum').hidden = true;
+    $('help-show').hidden = false;
+    $('btn-help-close').textContent = '👍 ¡A seguir!';
+    openOverlay('help');
+    sayAlways({ w: state.word });
+  }
+  $('btn-help-say').addEventListener('click', function () { if (state) sayAlways({ w: state.word }); });
+  $('btn-help-close').addEventListener('click', function () { closeOverlay('help'); });
 
   function renderFigure(fallen) {
     $('figure').innerHTML = window.figureSVG(state.errors, settings.gender, fallen, photo);
@@ -602,6 +738,7 @@
     sfx.win();
     confetti();
     var pick = state.mode === 'pick';
+    state.unlockMsg = state.drawn ? '' : addStar(state.cat);
     showEnd(state.pic, pick ? '¡Adivinaron tu palabra! 🎉' : '¡Ganaste! 🎉',
       pick ? '¡Y tú escribiste todas las letras!' : '¡Lo hiciste muy bien!');
     say(pick ? 'adivinaron' : 'ganaste_es', { w: state.word });
@@ -632,6 +769,7 @@
     $('end-title').textContent = title;
     $('end-text').textContent = text;
     $('end-word').innerHTML = state.pic + ' ' + escapeHTML(disp(state.word));
+    $('end-unlock').textContent = state.unlockMsg || '';
     openOverlay('end');
   }
 
