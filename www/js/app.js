@@ -479,52 +479,98 @@
     if (state && state.cat) sayAlways({ cat: state.cat });
   });
 
-  /* ---------- Ayuda: resolver una suma para ver la imagen ---------- */
-  var help = { sum: null, typed: '' };
+  /* ---------- Ayuda: resolver una suma en columnas para ver la imagen ---------- */
+  // Se resuelve como en el cuaderno: de derecha a izquierda, una casilla por vez. Lo que se
+  // lleva se escribe arriba de la columna siguiente, en verde.
+  var help = { sum: null, steps: null, step: 0 };
 
   $('btn-help').addEventListener('click', function () {
     if (!state || state.over) return;
     if (settings.help === 'free') { showHelpPic(); return; }
     help.sum = window.Progress.makeSum(settings.help);
-    help.typed = '';
-    $('sum-text').textContent = help.sum.a + ' + ' + help.sum.b;
+    help.steps = window.Progress.sumSteps(help.sum.a, help.sum.b);
+    help.step = 0;
+    renderSumGrid();
     $('sum-feedback').textContent = '';
-    renderSumAnswer();
     $('help-sum').hidden = false;
     $('help-show').hidden = true;
     $('btn-help-close').textContent = '⬅️ Volver';
     openOverlay('help');
+    showSumStep();
   });
 
-  function renderSumAnswer() { $('sum-answer').textContent = help.typed || '?'; }
+  // Cuadrícula: fila de lo que se lleva, los dos números, la raya y el resultado.
+  // Columnas de izquierda (centenas) a derecha (unidades), con el signo + adelante.
+  function renderSumGrid() {
+    var sp = help.steps, n = sp.cols, html = '';
+    var carryCells = sp.steps.map(function (st) { return st.cell; });
+    var col = function (i) { return ' col' + i; };
+    var row = function (first, cell) {
+      html += '<div class="sum-sign">' + first + '</div>';
+      for (var i = n - 1; i >= 0; i--) html += cell(i);
+    };
+    row('', function (i) {
+      return carryCells.indexOf('c' + i) !== -1 ? '<div class="sum-box carry" data-cell="c' + i + '"></div>' : '<div></div>';
+    });
+    row('', function (i) { return '<div class="sum-digit' + col(i) + '">' + (sp.a[i] === null ? '' : sp.a[i]) + '</div>'; });
+    row('+', function (i) { return '<div class="sum-digit' + col(i) + '">' + (sp.b[i] === null ? '' : sp.b[i]) + '</div>'; });
+    // La casilla de una columna sin números (cuando el total pasa de 99) aparece recién al llegar a ella.
+    row('', function (i) {
+      var later = sp.a[i] === null && sp.b[i] === null ? ' later' : '';
+      return '<div class="sum-box result' + col(i) + later + '" data-cell="r' + i + '"></div>';
+    });
+    var grid = $('sum-grid');
+    grid.style.gridTemplateColumns = '40px repeat(' + n + ', 64px)';
+    grid.innerHTML = html;
+  }
 
-  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✅'].forEach(function (k) {
-    var b = document.createElement('button');
+  function sumCell(id) { return $('sum-grid').querySelector('[data-cell="' + id + '"]'); }
+
+  function showSumStep() {
+    $('sum-grid').querySelectorAll('.sum-box').forEach(function (b) { b.classList.remove('active'); });
+    var st = help.steps.steps[help.step];
+    sumCell(st.cell).classList.remove('later');
+    sumCell(st.cell).classList.add('active');
+    $('sum-msg').textContent = st.msg;
+  }
+
+  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', ''].forEach(function (k) {
+    var b = document.createElement(k ? 'button' : 'span');
     b.textContent = k;
-    if (k === '✅') b.className = 'ok';
-    b.addEventListener('click', function () { onNumKey(k); });
+    if (k) b.addEventListener('click', function () { onNumKey(+k); });
     $('numpad').appendChild(b);
   });
 
-  function onNumKey(k) {
-    if (k === '⌫') help.typed = help.typed.slice(0, -1);
-    else if (k !== '✅') { if (help.typed.length < 2) help.typed += k; }
-    else if (help.typed) {
-      if (parseInt(help.typed, 10) === help.sum.a + help.sum.b) {
-        sfx.good();
-        showHelpPic();
-        return;
-      }
+  function onNumKey(d) {
+    if (!help.steps || help.step >= help.steps.steps.length) return;
+    var st = help.steps.steps[help.step], cell = sumCell(st.cell), fb = $('sum-feedback');
+    if (d !== st.expect) {
       sfx.bad();
-      help.typed = '';
-      var fb = $('sum-feedback');
       fb.style.color = 'var(--primary)';
       fb.textContent = '¡Casi! Cuenta otra vez 🤔';
-      fb.classList.remove('shake');
-      void fb.offsetWidth;
-      fb.classList.add('shake');
+      [cell, fb].forEach(function (el) {
+        el.classList.remove('shake');
+        void el.offsetWidth;
+        el.classList.add('shake');
+      });
+      return;
     }
-    renderSumAnswer();
+    cell.textContent = d;
+    cell.classList.add('done');
+    fb.textContent = '';
+    help.step++;
+    if (help.step < help.steps.steps.length) {
+      sfx.stroke();
+      showSumStep();
+      return;
+    }
+    // ¡Terminó la suma!
+    cell.classList.remove('active');
+    sfx.win();
+    fb.style.color = 'var(--yes)';
+    fb.textContent = '¡Muy bien! ' + help.sum.a + ' + ' + help.sum.b + ' = ' + (help.sum.a + help.sum.b) + ' 🎉';
+    $('sum-msg').textContent = '';
+    setTimeout(function () { if ($('help').classList.contains('active')) showHelpPic(); }, 1400);
   }
 
   // La imagen secreta con su palabra letra por letra, para que la mire y la siga escribiendo.

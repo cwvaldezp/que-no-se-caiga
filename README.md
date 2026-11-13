@@ -34,8 +34,11 @@ y, cuando acierta, también las escribe.
   juguetes, cuerpo, casa…). En la pantalla de inicio se ve el avance; ↺ lo borra. El orden y la cantidad de
   estrellas se cambian en `www/js/progress.js`.
 - **💡 Ayuda para ver la imagen:** en "Yo adivino", junto a la pista hay un botón 💡. Si el niño resuelve una
-  suma, ve la imagen con su palabra letra por letra (y la escucha) para memorizarla y seguir jugando. La suma
-  puede ser **hasta 10**, de **dos cifras** (resultado hasta 99, sin llevar), **sin suma** o se puede quitar la ayuda.
+  suma, ve la imagen con su palabra letra por letra (y la escucha) para memorizarla y seguir jugando.
+  La suma se resuelve **en columnas, como en el cuaderno**: unidades (azul) y decenas (rojo), de derecha a
+  izquierda y una casilla por vez. Si pasa de 9, lo que se lleva se escribe en una cajita verde arriba de
+  las decenas; si el total pasa de 99 aparece la casilla de las centenas. Se elige entre **hasta 10**,
+  **2 cifras sin llevar**, **2 cifras llevando**, **sin suma** o sin ayuda.
 
 Al adivinar aparece una **pista** con la categoría; al tocarla se escucha. Hay 109 imágenes en 11 categorías
 (animales, frutas, verduras, comida, ropa, cuerpo, juguetes, instrumentos, casa, transportes y naturaleza).

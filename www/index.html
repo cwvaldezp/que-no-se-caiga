@@ -57,7 +57,8 @@
         <button class="chip" data-setting="help" data-value="off">🚫 No</button>
         <button class="chip" data-setting="help" data-value="free">Sin suma</button>
         <button class="chip" data-setting="help" data-value="sum10">➕ Hasta 10</button>
-        <button class="chip" data-setting="help" data-value="sum99">➕ Dos cifras</button>
+        <button class="chip" data-setting="help" data-value="sum99">➕ 2 cifras sin llevar</button>
+        <button class="chip" data-setting="help" data-value="sum99c">➕ 2 cifras llevando</button>
       </div>
     </div>
 
@@ -177,7 +178,8 @@
     <div class="card">
       <div id="help-sum">
         <p class="question">Resuelve la suma y te muestro la imagen 💡</p>
-        <div class="sum"><span id="sum-text"></span> = <span id="sum-answer" class="sum-answer"></span></div>
+        <div id="sum-grid" class="sum-grid"></div>
+        <p id="sum-msg" class="sum-msg"></p>
         <p id="sum-feedback" class="feedback"></p>
         <div id="numpad" class="numpad"></div>
       </div>
