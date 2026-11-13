@@ -25,8 +25,9 @@ y sin enviar datos a ningún lado**.
 - **109 imágenes (emojis) en 11 categorías**, con una **pista** de categoría que se escucha.
 - **Niveles:** al principio sólo 🐾 Animales; cada palabra completada da ⭐ y con 3 ⭐ en la última categoría
   abierta se abre la siguiente. Opción "Todas" y botón para reiniciar.
-- **Ayuda 💡:** en *Yo adivino*, resolviendo una suma (hasta 10, o de dos cifras sin llevar con resultado
-  ≤ 99) se ve la imagen con su palabra letra por letra. Configurable.
+- **Ayuda 💡:** en *Yo adivino*, resolviendo una suma **en columnas** (casilla por casilla, con la cajita
+  verde para lo que se lleva y la casilla de centenas si pasa de 99) se ve la imagen con su palabra letra
+  por letra. Opciones: hasta 10, 2 cifras sin llevar, 2 cifras llevando, sin suma o sin ayuda.
 - **Selfie:** se toma una foto, se encuadra la cara y aparece en el niño del trampolín.
 - **Voz en español** que dice las letras, las frases y las palabras; **efectos de sonido**; ambos se
   pueden apagar.
