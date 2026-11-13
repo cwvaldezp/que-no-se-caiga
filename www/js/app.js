@@ -55,6 +55,10 @@
    * Claude en Android) se tocan las grabaciones de js/voice-clips.js.
    */
   var player = new Audio(), clipQueue = [], ttsBroken = false;
+  // ttsFails: veces seguidas que la voz del navegador no arrancó (en iPad a veces tarda; recién
+  // con varias seguidas pasamos a las grabaciones). utterance se guarda para que Safari no la
+  // pierda antes de terminar. voiceTurn cambia al callar, para que no hable una frase vieja.
+  var ttsFails = 0, utterance = null, voiceTurn = 0;
   player.onended = function () { playNextClip(); };
 
   function partText(p) {
@@ -96,6 +100,7 @@
 
   function stopVoice() {
     clipQueue = [];
+    voiceTurn++;
     try { player.pause(); } catch (e) { /* nada sonando */ }
     try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { /* sin voz */ }
   }
@@ -106,19 +111,26 @@
       u.lang = voice.lang;
       u.voice = voice;
       u.rate = 0.9;
-      var started = false;
-      u.onstart = function () { started = true; };
-      // Si la voz del navegador no arranca, usamos las grabaciones desde ahora.
+      var started = false, turn = voiceTurn;
+      u.onstart = function () { started = true; ttsFails = 0; };
+      // Si la voz del navegador no arranca, esta vez usamos las grabaciones; si falla varias
+      // veces seguidas, desde ahora.
       var fallback = function () {
-        if (started) return;
+        if (started || turn !== voiceTurn) return;
         started = true;
-        ttsBroken = true;
+        if (++ttsFails >= 3) ttsBroken = true;
         try { speechSynthesis.cancel(); } catch (e) { /* sin voz */ }
         playClips(parts);
       };
       u.onerror = function (e) { if (e.error !== 'interrupted' && e.error !== 'canceled') fallback(); };
-      setTimeout(fallback, 1500);
-      speechSynthesis.speak(u);
+      utterance = u;
+      // Safari a veces ignora una frase pedida justo después de callar la anterior: esperamos un poco.
+      setTimeout(function () {
+        if (turn !== voiceTurn) return;
+        try { speechSynthesis.resume(); } catch (e) { /* sin voz */ }
+        speechSynthesis.speak(u);
+        setTimeout(fallback, 2500);
+      }, 80);
     } catch (e) {
       ttsBroken = true;
       playClips(parts);
@@ -526,7 +538,6 @@
   function renderSumGrid() {
     var sp = help.steps, n = sp.cols, html = '';
     var carries = sp.steps.map(function (st) { return st.carryTo; });
-    var col = function (i) { return ' col' + i; };
     var row = function (first, cell) {
       html += '<div class="sum-sign">' + first + '</div>';
       for (var i = n - 1; i >= 0; i--) html += cell(i);
@@ -534,12 +545,13 @@
     row('', function (i) {
       return carries.indexOf(i) !== -1 ? '<div class="sum-box carry" data-cell="c' + i + '"></div>' : '<div></div>';
     });
-    row('', function (i) { return '<div class="sum-digit' + col(i) + '">' + (sp.a[i] === null ? '' : sp.a[i]) + '</div>'; });
-    row('+', function (i) { return '<div class="sum-digit' + col(i) + '">' + (sp.b[i] === null ? '' : sp.b[i]) + '</div>'; });
+    // Cada número de un color: el de arriba azul y el de abajo rojo.
+    row('', function (i) { return '<div class="sum-digit num-a">' + (sp.a[i] === null ? '' : sp.a[i]) + '</div>'; });
+    row('+', function (i) { return '<div class="sum-digit num-b">' + (sp.b[i] === null ? '' : sp.b[i]) + '</div>'; });
     // La casilla de una columna sin números (cuando el total pasa de 99) aparece recién al llenarla.
     row('', function (i) {
       var later = sp.a[i] === null && sp.b[i] === null ? ' later' : '';
-      return '<div class="sum-box result' + col(i) + later + '" data-cell="r' + i + '"></div>';
+      return '<div class="sum-box result' + later + '" data-cell="r' + i + '"></div>';
     });
     var grid = $('sum-grid');
     grid.style.gridTemplateColumns = '40px repeat(' + n + ', 64px)';
@@ -562,7 +574,8 @@
   function renderTyped() {
     var cell = sumCell('r' + help.steps.steps[help.step].col);
     cell.textContent = help.typed;
-    cell.classList.toggle('two', help.typed.length > 1);
+    cell.classList.toggle('two', help.typed.length === 2);
+    cell.classList.toggle('three', help.typed.length > 2);
   }
 
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✅'].forEach(function (k) {
@@ -577,9 +590,11 @@
     if (!help.steps || help.busy || help.step >= help.steps.steps.length) return;
     var st = help.steps.steps[help.step], fb = $('sum-feedback');
     if (k === '⌫') help.typed = help.typed.slice(0, -1);
-    else if (k !== '✅') { if (help.typed.length < 2) help.typed += k; }
+    else if (k !== '✅') { if (help.typed.length < maxTyped()) help.typed += k; }
     else if (help.typed) {
-      if (parseInt(help.typed, 10) === st.sum) { placeColumn(st); return; }
+      var n = parseInt(help.typed, 10);
+      if (n === st.sum) { placeColumn(st); return; }
+      if (help.step === 0 && n === help.sum.a + help.sum.b) { placeTotal(); return; }
       sfx.bad();
       help.typed = '';
       fb.style.color = 'var(--primary)';
@@ -595,12 +610,42 @@
     renderTyped();
   }
 
+  // En el primer paso se puede escribir el total de una vez (si lo sabe de memoria, como 20 + 21 = 41).
+  function maxTyped() {
+    return help.step === 0 ? Math.max(2, String(help.sum.a + help.sum.b).length) : 2;
+  }
+
+  // Lo sumó de memoria: se llena todo el resultado (y lo que se lleva) y se pasa a la imagen.
+  function placeTotal() {
+    help.busy = true;
+    var total = String(help.sum.a + help.sum.b), id = ++help.id, fb = $('sum-feedback');
+    $('sum-grid').querySelectorAll('.sum-box').forEach(function (b) { b.classList.remove('active', 'two', 'three', 'later'); });
+    for (var i = 0; i < total.length; i++) {
+      var cell = sumCell('r' + i);
+      cell.textContent = total[total.length - 1 - i];
+      cell.classList.add('done');
+    }
+    help.steps.steps.forEach(function (st) {
+      if (st.carryTo === null) return;
+      var c = sumCell('c' + st.carryTo);
+      c.textContent = Math.floor(st.sum / 10);
+      c.classList.add('done');
+    });
+    help.step = help.steps.steps.length;
+    sfx.win();
+    fb.style.color = 'var(--yes)';
+    fb.textContent = '¡Muy bien, lo sumaste de memoria! ' + help.sum.a + ' + ' + help.sum.b + ' = ' + total + ' 🎉';
+    $('sum-msg').textContent = '';
+    say({ t: 'Muy bien, lo sumaste de memoria. ' + help.sum.a + ' más ' + help.sum.b + ' es ' + total });
+    setTimeout(function () { if (help.id === id && $('help').classList.contains('active')) showHelpPic(); }, 3800);
+  }
+
   // Suma correcta: abajo va la última cifra y lo que se lleva arriba de la columna siguiente
   // (en la última columna se escribe el número entero, abriendo la casilla de la izquierda).
   function placeColumn(st) {
     help.busy = true;
     var cell = sumCell('r' + st.col), fb = $('sum-feedback');
-    cell.classList.remove('active', 'two');
+    cell.classList.remove('active', 'two', 'three');
     cell.textContent = st.sum % 10;
     cell.classList.add('done');
     if (st.carryTo !== null) {

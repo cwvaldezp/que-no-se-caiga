@@ -35,8 +35,8 @@ y, cuando acierta, también las escribe.
   estrellas se cambian en `www/js/progress.js`.
 - **💡 Ayuda para ver la imagen:** en "Yo adivino", junto a la pista hay un botón 💡. Si el niño resuelve una
   suma, ve la imagen con su palabra letra por letra (y la escucha) para memorizarla y seguir jugando.
-  La suma se resuelve **en columnas, como en el cuaderno**: unidades (azul) y decenas (rojo), de derecha a
-  izquierda: el niño escribe la suma de cada columna y toca ✅. Si pasa de 9 (por ejemplo 3 + 7 = 10), el juego
+  La suma se resuelve **en columnas, como en el cuaderno** (el número de arriba en azul y el de abajo en rojo),
+  de derecha a izquierda: el niño escribe la suma de cada columna y toca ✅. Si pasa de 9 (por ejemplo 3 + 7 = 10), el juego
   pone el 0 abajo y el 1 que se lleva en una cajita verde arriba de las decenas, y dice "Correcto, escribo el 0
   y llevo 1". En la última columna se escribe el número entero (si pasa de 99 aparece la casilla de las centenas).
   Como el niño puede no saber leer todavía, la suma se dice en voz alta ("¿Cuánto es 33 más 37? Suma las

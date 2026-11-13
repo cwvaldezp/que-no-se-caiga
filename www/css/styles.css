@@ -275,16 +275,16 @@ h2 { margin: 0; font-size: clamp(20px, 5.5vw, 28px); text-align: center; }
 .help-btn[hidden] { display: none; }
 #help-sum, #help-show { display: flex; flex-direction: column; align-items: center; width: 100%; }
 #help-sum[hidden], #help-show[hidden] { display: none; }
-/* Suma en columnas: unidades en azul, decenas en rojo, centenas en morado y lo que se lleva en verde */
+/* Suma en columnas: el número de arriba en azul, el de abajo en rojo y lo que se lleva en verde */
 .sum-grid { display: grid; gap: 4px; justify-content: center; margin: 4px 0; }
 .sum-sign, .sum-digit, .sum-box {
   height: 58px; display: flex; align-items: center; justify-content: center;
   font-size: 44px; font-weight: bold; line-height: 1;
 }
 .sum-sign { color: var(--ink); }
-.col0 { color: #1e7fd0; }
-.col1 { color: #e53935; }
-.col2 { color: #8e44ad; }
+.num-a { color: #1e7fd0; }
+.num-b { color: #e53935; }
+.sum-box.result { color: var(--ink); }
 .sum-box { border: 3px dashed #d9d3f0; border-radius: 12px; background: #fff; }
 .sum-box.result { margin-top: 6px; position: relative; }
 .sum-box.result::before {
@@ -295,6 +295,7 @@ h2 { margin: 0; font-size: clamp(20px, 5.5vw, 28px); text-align: center; }
 .sum-box.carry.active { border-color: #27ae60; background: #eafaf0; }
 .sum-box.later { visibility: hidden; }
 .sum-box.two { font-size: 34px; letter-spacing: -1px; }
+.sum-box.three { font-size: 24px; letter-spacing: -1px; }
 .sum-box.done { border-style: solid; border-color: #efeaff; animation: pop .3s ease-out; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(79, 195, 247, .25); } }
 .sum-say-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
