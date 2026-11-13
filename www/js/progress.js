@@ -43,10 +43,11 @@ window.STARS_TO_UNLOCK = 3;
     },
 
     /*
-     * Pasos para resolver a + b en columnas, de derecha a izquierda. Cada paso es una casilla
-     * que el niño llena con un dígito: 'r0' es el resultado de las unidades, 'c1' la cajita
-     * de arriba de las decenas donde se pone lo que se lleva, etc.
-     * Devuelve { cols: cantidad de columnas, a: [dígitos], b: [dígitos], steps: [{ cell, expect, msg }] }
+     * Pasos para resolver a + b en columnas, de derecha a izquierda: un paso por cada columna
+     * con números. En cada paso el niño escribe la suma completa de la columna (por ejemplo 10)
+     * y el juego la acomoda: si pasa de 9, abajo va la última cifra y lo que se lleva va arriba
+     * de la columna siguiente (carryTo). En la última columna se escribe el número entero.
+     * Devuelve { cols, a: [dígitos], b: [dígitos], steps: [{ col, sum, carryTo, say, msg }] }
      * (los dígitos van de las unidades hacia la izquierda; null si el número no tiene esa cifra).
      */
     sumSteps: function (a, b) {
@@ -57,30 +58,25 @@ window.STARS_TO_UNLOCK = 3;
         return out;
       };
       var da = digits(a), db = digits(b), steps = [], carry = 0;
-      for (var i = 0; i < cols; i++) {
+      var used = Math.max(String(a).length, String(b).length);
+      for (var i = 0; i < used; i++) {
         var parts = [];
         if (carry) parts.push(carry);
         if (da[i] !== null) parts.push(da[i]);
         if (db[i] !== null) parts.push(db[i]);
-        var s = parts.reduce(function (x, y) { return x + y; }, 0);
-        var hasNumbers = da[i] !== null || db[i] !== null;
+        var sum = parts.reduce(function (x, y) { return x + y; }, 0);
+        var last = i === used - 1;
+        var carryTo = !last && sum >= 10 ? i + 1 : null;
         steps.push({
-          cell: 'r' + i,
-          expect: s % 10,
-          msg: !hasNumbers
-            ? '¡Llevas ' + carry + '! Escríbelo abajo, en las ' + COLS[i] + ' 👇'
-            : (i ? 'Ahora suma las ' : 'Suma las ') + COLS[i] + ': ' + parts.join(' + ')
+          col: i,
+          sum: sum,
+          carryTo: carryTo,
+          msg: (i ? 'Ahora suma las ' : 'Suma las ') + COLS[i] + ': ' + parts.join(' + '),
+          say: carryTo !== null
+            ? 'Correcto, escribo el ' + (sum % 10) + ' y llevo ' + Math.floor(sum / 10)
+            : 'Correcto, escribo el ' + sum
         });
-        carry = s >= 10 ? 1 : 0;
-        // Lo que se lleva se escribe arriba de la columna siguiente, si esa columna tiene números.
-        if (carry && i + 1 < cols && (da[i + 1] !== null || db[i + 1] !== null)) {
-          steps.push({
-            cell: 'c' + (i + 1),
-            expect: carry,
-            msg: '¡Bien! ' + parts.join(' + ') + ' = ' + s + '. Abajo va el ' + (s % 10) +
-              ' y llevas ' + carry + ': escríbelo arriba, en las ' + COLS[i + 1] + ' ☝️'
-          });
-        }
+        carry = sum >= 10 ? 1 : 0;
       }
       return { cols: cols, a: da, b: db, steps: steps };
     }

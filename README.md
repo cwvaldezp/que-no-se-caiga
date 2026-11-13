@@ -36,8 +36,9 @@ y, cuando acierta, también las escribe.
 - **💡 Ayuda para ver la imagen:** en "Yo adivino", junto a la pista hay un botón 💡. Si el niño resuelve una
   suma, ve la imagen con su palabra letra por letra (y la escucha) para memorizarla y seguir jugando.
   La suma se resuelve **en columnas, como en el cuaderno**: unidades (azul) y decenas (rojo), de derecha a
-  izquierda y una casilla por vez. Si pasa de 9, lo que se lleva se escribe en una cajita verde arriba de
-  las decenas; si el total pasa de 99 aparece la casilla de las centenas. Se elige entre **hasta 10**,
+  izquierda: el niño escribe la suma de cada columna y toca ✅. Si pasa de 9 (por ejemplo 3 + 7 = 10), el juego
+  pone el 0 abajo y el 1 que se lleva en una cajita verde arriba de las decenas, y dice "Correcto, escribo el 0
+  y llevo 1". En la última columna se escribe el número entero (si pasa de 99 aparece la casilla de las centenas). Se elige entre **hasta 10**,
   **2 cifras sin llevar**, **2 cifras llevando**, **sin suma** o sin ayuda.
 
 Al adivinar aparece una **pista** con la categoría; al tocarla se escucha. Hay 109 imágenes en 11 categorías

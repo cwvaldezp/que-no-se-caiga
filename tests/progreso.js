@@ -21,10 +21,17 @@ assert.deepStrictEqual(P.unlocked({ animal: N, comida: 9 }), ['animal', 'fruta']
 const all = {}; ORDER.forEach(k => { all[k] = N; });
 assert.deepStrictEqual(P.unlocked(all), ORDER);
 
-// Resuelve la suma siguiendo los pasos y devuelve el resultado escrito en las casillas.
+// Resuelve la suma siguiendo los pasos (como lo acomoda el juego) y devuelve el resultado.
 function solve(a, b) {
   const sp = P0.sumSteps(a, b), r = [];
-  sp.steps.forEach(st => { if (st.cell[0] === 'r') r[+st.cell.slice(1)] = st.expect; });
+  let carry = 0;
+  sp.steps.forEach(st => {
+    const parts = [carry, sp.a[st.col] || 0, sp.b[st.col] || 0];
+    assert.strictEqual(st.sum, parts.reduce((x, y) => x + y), 'suma de la columna ' + st.col);
+    r[st.col] = st.sum % 10;
+    if (st.carryTo === null && st.sum >= 10) r[st.col + 1] = 1;
+    carry = st.sum >= 10 ? 1 : 0;
+  });
   assert.strictEqual(r.length, sp.cols);
   return +r.slice().reverse().join('');
 }
@@ -36,7 +43,7 @@ for (let i = 0; i < 20000; i++) {
   const h = P.makeSum('sum99');
   assert(h.a >= 10 && h.b >= 10 && h.a + h.b <= 99, JSON.stringify(h));
   assert((h.a % 10) + (h.b % 10) <= 9, 'sin llevar: ' + JSON.stringify(h));
-  assert(!P0.sumSteps(h.a, h.b).steps.some(st => st.cell[0] === 'c'), 'sin llevar no pide cajita: ' + JSON.stringify(h));
+  assert(P0.sumSteps(h.a, h.b).steps.every(st => st.carryTo === null), 'sin llevar no lleva: ' + JSON.stringify(h));
   assert.strictEqual(solve(h.a, h.b), h.a + h.b);
   const c = P.makeSum('sum99c');
   assert(c.a >= 10 && c.a <= 99 && c.b >= 10 && c.b <= 99, JSON.stringify(c));
@@ -46,10 +53,11 @@ for (let i = 0; i < 20000; i++) {
 }
 assert(overflow > 1000, 'a veces la suma llevando pasa de 99');
 
-// 45 + 37: unidades, se lleva 1 arriba de las decenas, decenas.
-assert.deepStrictEqual(P0.sumSteps(45, 37).steps.map(s => s.cell + '=' + s.expect).join(' '), 'r0=2 c1=1 r1=8');
-// 78 + 45 = 123: se lleva a las decenas y el 1 de las centenas baja directo.
-assert.deepStrictEqual(P0.sumSteps(78, 45).steps.map(s => s.cell + '=' + s.expect).join(' '), 'r0=3 c1=1 r1=2 r2=1');
-// 4 + 6 = 10: una cifra que pasa a las decenas.
-assert.deepStrictEqual(P0.sumSteps(4, 6).steps.map(s => s.cell + '=' + s.expect).join(' '), 'r0=0 r1=1');
+const show = (a, b) => P0.sumSteps(a, b).steps.map(s => s.sum + (s.carryTo ? '→' + s.carryTo : '') + ' «' + s.say + '»').join(' | ');
+// 33 + 37: el niño escribe 10, el juego pone el 0 y lleva 1; después 7.
+assert.strictEqual(show(33, 37), '10→1 «Correcto, escribo el 0 y llevo 1» | 7 «Correcto, escribo el 7»');
+// 78 + 45 = 123: 13 (llevo 1) y luego 12, que se escribe entero en la última columna.
+assert.strictEqual(show(78, 45), '13→1 «Correcto, escribo el 3 y llevo 1» | 12 «Correcto, escribo el 12»');
+// 4 + 6 = 10: una sola columna, se escribe el 10 entero.
+assert.strictEqual(show(4, 6), '10 «Correcto, escribo el 10»');
 console.log('OK: niveles y sumas');
