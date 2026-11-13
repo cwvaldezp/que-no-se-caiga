@@ -38,7 +38,9 @@ y, cuando acierta, también las escribe.
   La suma se resuelve **en columnas, como en el cuaderno**: unidades (azul) y decenas (rojo), de derecha a
   izquierda: el niño escribe la suma de cada columna y toca ✅. Si pasa de 9 (por ejemplo 3 + 7 = 10), el juego
   pone el 0 abajo y el 1 que se lleva en una cajita verde arriba de las decenas, y dice "Correcto, escribo el 0
-  y llevo 1". En la última columna se escribe el número entero (si pasa de 99 aparece la casilla de las centenas). Se elige entre **hasta 10**,
+  y llevo 1". En la última columna se escribe el número entero (si pasa de 99 aparece la casilla de las centenas).
+  Como el niño puede no saber leer todavía, la suma se dice en voz alta ("¿Cuánto es 33 más 37? Suma las
+  unidades: 3 más 7"), igual que cada paso, y el botón 🔊 la repite. Se elige entre **hasta 10**,
   **2 cifras sin llevar**, **2 cifras llevando**, **sin suma** o sin ayuda.
 
 Al adivinar aparece una **pista** con la categoría; al tocarla se escucha. Hay 109 imágenes en 11 categorías

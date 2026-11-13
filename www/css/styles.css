@@ -297,7 +297,9 @@ h2 { margin: 0; font-size: clamp(20px, 5.5vw, 28px); text-align: center; }
 .sum-box.two { font-size: 34px; letter-spacing: -1px; }
 .sum-box.done { border-style: solid; border-color: #efeaff; animation: pop .3s ease-out; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(79, 195, 247, .25); } }
-.sum-msg { font-size: 19px; min-height: 2.6em; margin: 8px 0 0; color: var(--ink); }
+.sum-say-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.sum-msg { font-size: 19px; min-height: 2.6em; margin: 0; color: var(--ink); display: flex; align-items: center; }
+.say-btn { flex: none; font-size: 24px; width: 48px; height: 48px; border-radius: 50%; background: #fff3c4; box-shadow: 0 3px 0 #f1dc8a; }
 #help .feedback { margin-top: 2px; }
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 300px; margin: 8px 0 4px; }
 .numpad button {

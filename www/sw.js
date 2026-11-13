@@ -1,6 +1,6 @@
 // Guarda el juego en el teléfono para que funcione sin internet.
 // Con internet siempre se usa la versión publicada (y se guarda); sin internet, la guardada.
-var CACHE = 'ahorcado-v13';
+var CACHE = 'ahorcado-v14';
 var FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/styles.css',
   'js/phrases.js', 'js/voice-clips.js', 'js/letters.js', 'js/words.js', 'js/progress.js', 'js/figure.js', 'js/tracer.js', 'js/app.js',

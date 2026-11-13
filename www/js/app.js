@@ -485,13 +485,15 @@
   /* ---------- Ayuda: resolver una suma en columnas para ver la imagen ---------- */
   // Se resuelve como en el cuaderno, de derecha a izquierda: el niño escribe la suma de cada
   // columna (por ejemplo 10) y el juego la acomoda: abajo el 0 y el 1 que se lleva arriba, en verde.
-  var help = { sum: null, steps: null, step: 0, typed: '', busy: false };
+  // id cambia con cada suma nueva, para que los pasos pendientes de una suma cerrada no sigan.
+  var help = { id: 0, sum: null, steps: null, step: 0, typed: '', busy: false };
 
   $('btn-help').addEventListener('click', function () {
     if (!state || state.over) return;
     if (settings.help === 'free') { showHelpPic(); return; }
     help.sum = window.Progress.makeSum(settings.help);
     help.steps = window.Progress.sumSteps(help.sum.a, help.sum.b);
+    help.id++;
     help.step = 0;
     help.busy = false;
     renderSumGrid();
@@ -500,7 +502,23 @@
     $('help-show').hidden = true;
     $('btn-help-close').textContent = '⬅️ Volver';
     openOverlay('help');
-    showSumStep();
+    showSumStep(true);
+  });
+
+  // Lo que se dice en voz alta (el niño todavía no lee): "3 + 7" se dice "3 más 7".
+  function spoken(text) { return text.replace(/\+/g, 'más').replace(/=/g, 'es'); }
+  // La pregunta de la suma y, si hay más de una columna, qué sumar ahora.
+  function sumSpeech(first) {
+    var st = help.steps.steps[help.step];
+    var q = '¿Cuánto es ' + help.sum.a + ' más ' + help.sum.b + '?';
+    if (help.steps.steps.length === 1) return q;
+    return (first ? q + ' ' : '') + spoken(st.msg);
+  }
+  $('btn-sum-say').addEventListener('click', function () {
+    if (!help.steps) return;
+    var total = help.sum.a + help.sum.b;
+    if (help.step >= help.steps.steps.length) sayAlways({ t: help.sum.a + ' más ' + help.sum.b + ' es ' + total });
+    else sayAlways({ t: sumSpeech(true) });
   });
 
   // Cuadrícula: fila de lo que se lleva, los dos números, la raya y el resultado.
@@ -530,13 +548,14 @@
 
   function sumCell(id) { return $('sum-grid').querySelector('[data-cell="' + id + '"]'); }
 
-  function showSumStep() {
+  function showSumStep(first) {
     var st = help.steps.steps[help.step];
     help.typed = '';
     $('sum-grid').querySelectorAll('.sum-box').forEach(function (b) { b.classList.remove('active'); });
     sumCell('r' + st.col).classList.add('active');
     renderTyped();
     $('sum-msg').textContent = st.msg;
+    say({ t: sumSpeech(first) });
   }
 
   // Lo que el niño va escribiendo se ve en la casilla activa (puede tener dos cifras, como 10).
@@ -565,6 +584,7 @@
       help.typed = '';
       fb.style.color = 'var(--primary)';
       fb.textContent = '¡Casi! Cuenta otra vez 🤔';
+      say('casi');
       var cell = sumCell('r' + st.col);
       [cell, fb].forEach(function (el) {
         el.classList.remove('shake');
@@ -597,20 +617,22 @@
     fb.textContent = '¡' + st.say + '! ' + (st.carryTo !== null ? '☝️' : '✅');
     say({ t: st.say });
     help.step++;
-    var finished = help.step >= help.steps.steps.length;
+    var finished = help.step >= help.steps.steps.length, id = help.id;
+    var current = function () { return help.id === id && $('help').classList.contains('active'); };
     if (finished) sfx.win(); else sfx.good();
     setTimeout(function () {
-      if (!$('help').classList.contains('active')) return;
+      if (!current()) return;
       if (finished) {
         fb.textContent = '¡Muy bien! ' + help.sum.a + ' + ' + help.sum.b + ' = ' + (help.sum.a + help.sum.b) + ' 🎉';
         $('sum-msg').textContent = '';
-        setTimeout(function () { if ($('help').classList.contains('active')) showHelpPic(); }, 1400);
+        say({ t: spoken(fb.textContent.replace(' 🎉', '')) });
+        setTimeout(function () { if (current()) showHelpPic(); }, 3000);
         return;
       }
       help.busy = false;
       fb.textContent = '';
       showSumStep();
-    }, 2200);
+    }, 2800);
   }
 
   // La imagen secreta con su palabra letra por letra, para que la mire y la siga escribiendo.
